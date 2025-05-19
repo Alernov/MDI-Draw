@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -61,11 +61,11 @@ namespace Paint
         public int tool
         {
             get { return tool1; }
-            set 
+            set
             {
                 int to = tool1;
-                tool1 = value; penline = new Pen(clr, 4); 
-                if (tool1 == 5 || tool1 == 7) copyR = true; 
+                tool1 = value; penline = new Pen(clr, 4);
+                if (tool1 == 5 || tool1 == 7) copyR = true;
                 if (tool1 == 6) insR = true;
                 if (tool1 == 8)
                 {
@@ -91,7 +91,7 @@ namespace Paint
         public Color clr1
         {
             get { return clr; }
-            set { clr = value;  }
+            set { clr = value; }
         }
         public int penNonFil
         {
@@ -106,6 +106,11 @@ namespace Paint
             mPoints = new List<Point>();
             Point pStart = new Point(x, y);
             mPoints.Add(pStart);
+            if (tool1 == 5 || tool1 == 7)
+            {
+                rect.X = e.X;
+                rect.Y = e.Y;
+            }
         }
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
@@ -126,16 +131,8 @@ namespace Paint
             {
                 if (e.Button == MouseButtons.Left)
                 {
-                    if (x == 0 || y == 0)
-                    {
-                        x = e.X;
-                        y = e.Y;
-                    }
-                    else
-                    {
-                        w = e.X - x;
-                        h = e.Y - y;
-                    }
+                    w = e.X - x;
+                    h = e.Y - y;
                     pictureBox1.Refresh();
                 }
             }
@@ -143,16 +140,8 @@ namespace Paint
             {
                 if (e.Button == MouseButtons.Left)
                 {
-                    if (x == 0 || y == 0)
-                    {
-                        x = e.X;
-                        y = e.Y;
-                    }
-                    else
-                    {
-                        w = e.X;
-                        h = e.Y;
-                    }
+                    w = e.X;
+                    h = e.Y;
                     pictureBox1.Refresh();
                 }
             }
@@ -160,16 +149,8 @@ namespace Paint
             {
                 if (e.Button == MouseButtons.Left)
                 {
-                    if (rect.X == 0 || rect.Y == 0)
-                    {
-                        rect.X = e.X;
-                        rect.Y = e.Y;
-                    }
-                    else
-                    {
-                        rect.Width = e.X - rect.X;
-                        rect.Height = e.Y - rect.Y;
-                    }
+                    rect.Width = e.X - rect.X;
+                    rect.Height = e.Y - rect.Y;
                     pictureBox1.Refresh();
                 }
             }
@@ -179,56 +160,68 @@ namespace Paint
         {
             if (tool1 == 4)
             {
+                int drawX = w < 0 ? x + w : x;
+                int drawY = h < 0 ? y + h : y;
+                int drawWidth = Math.Abs(w);
+                int drawHeight = Math.Abs(h);
+
                 if (fillF)
                 {
-                    gr.DrawEllipse(penline, x, y, w, h);
-                    gr.FillEllipse(fillBrush[t], x, y, w, h);
+                    gr.DrawEllipse(penline, drawX, drawY, drawWidth, drawHeight);
+                    gr.FillEllipse(fillBrush[t], drawX, drawY, drawWidth, drawHeight);
                 }
                 else
-                    gr.DrawEllipse(penline, x, y, w, h);
+                    gr.DrawEllipse(penline, drawX, drawY, drawWidth, drawHeight);
                 gr.Save();
                 fillBrush.Add(new SolidBrush(clrBr));
-                x = 0;
-                y = 0;
-                w = 0;
-                h = 0;
             }
             if (tool1 == 3)
             {
+                int drawX = w < 0 ? x + w : x;
+                int drawY = h < 0 ? y + h : y;
+                int drawWidth = Math.Abs(w);
+                int drawHeight = Math.Abs(h);
+
                 if (fillF)
                 {
-                    gr.DrawRectangle(penline, x, y, w, h);
-                    gr.FillRectangle(fillBrush[t], x, y, w, h);
+                    gr.DrawRectangle(penline, drawX, drawY, drawWidth, drawHeight);
+                    gr.FillRectangle(fillBrush[t], drawX, drawY, drawWidth, drawHeight);
                 }
                 else
-                    gr.DrawRectangle(penline, x, y, w, h);
+                    gr.DrawRectangle(penline, drawX, drawY, drawWidth, drawHeight);
                 gr.Save();
                 fillBrush.Add(new SolidBrush(clrBr));
-                x = 0;
-                y = 0;
-                w = 0;
-                h = 0;
             }
             if (tool1 == 2)
             {
                 gr.DrawLine(penline, x, y, w, h);
                 gr.Save();
-                x = 0;
-                y = 0;
-                w = 0;
-                h = 0;
             }
             if (e.Button == MouseButtons.Left)
             {
                 if (tool1 == 5 || tool1 == 7 && copyR == true)
                 {
                     copyR = false;
-                    s = rect.Size;
+
+                    // Нормализация прямоугольника выделения
+                    Rectangle normalizedRect = rect;
+                    if (rect.Width < 0)
+                    {
+                        normalizedRect.X += rect.Width;
+                        normalizedRect.Width = -rect.Width;
+                    }
+                    if (rect.Height < 0)
+                    {
+                        normalizedRect.Y += rect.Height;
+                        normalizedRect.Height = -rect.Height;
+                    }
+
+                    s = normalizedRect.Size;
                     bmpR = new Bitmap(s.Width, s.Height);
                     Rectangle dest_rect = new Rectangle(0, 0, bmpR.Width, bmpR.Height);
                     using (Graphics g = Graphics.FromImage(bmpR))
                     {
-                        g.DrawImage(pictureBox1.Image, dest_rect, rect, GraphicsUnit.Pixel);
+                        g.DrawImage(pictureBox1.Image, dest_rect, normalizedRect, GraphicsUnit.Pixel);
                     }
                     Clipboard.SetImage(bmpR);
                     if (tool1 == 7)
@@ -236,7 +229,7 @@ namespace Paint
                         using (Graphics g = Graphics.FromImage(pictureBox1.Image))
                         {
                             Brush fillBrush = new SolidBrush(clrWh);
-                            g.FillRectangle(fillBrush, rect);
+                            g.FillRectangle(fillBrush, normalizedRect);
                         }
                     }
                     pictureBox1.Refresh();
@@ -246,49 +239,64 @@ namespace Paint
                 {
                     insR = false;
                     Image img = Clipboard.GetImage();
-                    Rectangle src_rect = new Rectangle(0, 0, img.Width, img.Height);
-                    using (Graphics g1 = Graphics.FromImage(pictureBox1.Image))
+                    if (img != null)
                     {
-                        g1.DrawImage(img, e.X, e.Y, src_rect, GraphicsUnit.Pixel);
+                        Rectangle src_rect = new Rectangle(0, 0, img.Width, img.Height);
+                        using (Graphics g1 = Graphics.FromImage(pictureBox1.Image))
+                        {
+                            g1.DrawImage(img, e.X, e.Y, src_rect, GraphicsUnit.Pixel);
+                        }
+                        pictureBox1.Refresh();
                     }
-                    pictureBox1.Refresh();
                 }
             }
+            // Сброс координат
+            x = y = w = h = 0;
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
-        { 
+        {
             if (tool1 == 4)
             {
+                int drawX = w < 0 ? x + w : x;
+                int drawY = h < 0 ? y + h : y;
+                int drawWidth = Math.Abs(w);
+                int drawHeight = Math.Abs(h);
+
                 if (fillF)
                 {
                     penline = new Pen(clr, 7);
                     t++;
                     fillBrush.Add(new SolidBrush(clrBr));
-                    e.Graphics.DrawEllipse(penline, x, y, w, h);
-                    e.Graphics.FillEllipse(fillBrush[t], x, y, w, h);
+                    e.Graphics.DrawEllipse(penline, drawX, drawY, drawWidth, drawHeight);
+                    e.Graphics.FillEllipse(fillBrush[t], drawX, drawY, drawWidth, drawHeight);
                 }
                 else
                 {
                     penline = new Pen(clr, 4);
-                    e.Graphics.DrawEllipse(penline, x, y, w, h);
-                } 
+                    e.Graphics.DrawEllipse(penline, drawX, drawY, drawWidth, drawHeight);
+                }
                 e.Graphics.Save();
             }
             if (tool1 == 3)
             {
+                int drawX = w < 0 ? x + w : x;
+                int drawY = h < 0 ? y + h : y;
+                int drawWidth = Math.Abs(w);
+                int drawHeight = Math.Abs(h);
+
                 if (fillF)
                 {
                     penline = new Pen(clr, 7);
                     t++;
                     fillBrush.Add(new SolidBrush(clrBr));
-                    e.Graphics.DrawRectangle(penline, x, y, w, h);
-                    e.Graphics.FillRectangle(fillBrush[t], x, y, w, h);
+                    e.Graphics.DrawRectangle(penline, drawX, drawY, drawWidth, drawHeight);
+                    e.Graphics.FillRectangle(fillBrush[t], drawX, drawY, drawWidth, drawHeight);
                 }
                 else
                 {
                     penline = new Pen(clr, 4);
-                    e.Graphics.DrawRectangle(penline, x, y, w, h);
+                    e.Graphics.DrawRectangle(penline, drawX, drawY, drawWidth, drawHeight);
                 }
                 e.Graphics.Save();
             }
@@ -299,7 +307,21 @@ namespace Paint
                 e.Graphics.Save();
             }
             if (tool1 == 5 || tool1 == 7)
-                e.Graphics.DrawRectangle(penCopy, rect);
+            {
+                // Нормализация прямоугольника выделения для отрисовки
+                Rectangle drawRect = rect;
+                if (rect.Width < 0)
+                {
+                    drawRect.X += rect.Width;
+                    drawRect.Width = -rect.Width;
+                }
+                if (rect.Height < 0)
+                {
+                    drawRect.Y += rect.Height;
+                    drawRect.Height = -rect.Height;
+                }
+                e.Graphics.DrawRectangle(penCopy, drawRect);
+            }
         }
     }
 }
