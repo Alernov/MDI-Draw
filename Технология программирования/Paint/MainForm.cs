@@ -184,8 +184,12 @@ namespace Paint
             var activeChild = this.ActiveMdiChild as ChildForm;
             if (activeChild != null)
             {
+                // Сбрасываем текущий инструмент при включении заливки
+                if (fillToolStripMenuItem.Checked)
+                {
+                    activeChild.tool = 0; // 0 - специальное значение для заливки
+                }
                 activeChild.IsFillEnabled = fillToolStripMenuItem.Checked;
-                
             }
         }
 

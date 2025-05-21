@@ -75,15 +75,18 @@ namespace Paint
             get { return tool1; }
             set
             {
-                int to = tool1;
-                tool1 = value;
-                
-                // При смене инструмента сбрасываем режим заливки
-                isFillEnabled = false;
-                if (fmParent != null)
+                // Если устанавливается обычный инструмент (не заливка)
+                if (value != 0)
                 {
-                    fmParent.FillMenuItemChecked = false;
+                    // Сбрасываем режим заливки
+                    isFillEnabled = false;
+                    if (fmParent != null)
+                    {
+                        fmParent.FillMenuItemChecked = false;
+                    }
                 }
+
+                tool1 = value;
 
                 // Всегда используем цвет пера для инструментов рисования
                 penline = new Pen(PenColor, penline.Width);
@@ -101,7 +104,7 @@ namespace Paint
                         g.Clear(clrWh);
                     pictureBox1.Image = bmp1;
                     gr = Graphics.FromImage(bmp1);
-                    tool1 = to;
+                    tool1 = 1; // Возвращаемся к инструменту по умолчанию
                 }
             }
         }
